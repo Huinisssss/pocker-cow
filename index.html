@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cow Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="decoration">🏮🐲✨🧧</div>
+    <div id="calculationResult" onclick="toggleResult()">Result</div>
+    <div class="result-container">
+        <div id="result">🐮</div>     
+    </div>
+
+    <div class="box-container">
+        <div class="box" id="box1"><img src='poker_card.png' alt='Card'></div>
+        <div class="box" id="box2"><img src='poker_card.png' alt='Card'></div>
+        <div class="box" id="box3"><img src='poker_card.png' alt='Card'></div>
+        <div class="box" id="box4"><img src='poker_card.png' alt='Card'></div>
+        <div class="box" id="box5"><img src='poker_card.png' alt='Card'></div>
+    </div>
+    <div class="input-container">
+        <button onclick="addValue('A')">A</button>
+        <button onclick="addValue('2')">2</button>
+        <button onclick="addValue('3')">3</button>
+        <button onclick="addValue('4')">4</button>
+        <button onclick="addValue('5')">5</button>
+        <button onclick="addValue('6')">6</button>
+        <button onclick="addValue('7')">7</button>
+        <button onclick="addValue('8')">8</button>
+        <button onclick="addValue('9')">9</button>
+        <button onclick="addValue('10')">10</button>
+        <button onclick="addValue('J')">J</button>
+        <button onclick="addValue('Q')">Q</button>
+        <button onclick="addValue('K')">K</button>
+        <button onclick="removeLast()">❌</button>
+        <button onclick="refreshBoxes()">🔄</button>
+    </div>
+
+    <script src="cow_calculation.js"></script>
+</body>
+</html>
