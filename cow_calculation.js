@@ -15,6 +15,7 @@ function removeLast() {
 
 function refreshBoxes() {
     values = [];
+    result = null;
     updateDisplay();
 }
 
@@ -86,20 +87,64 @@ function checkCowCondition(triplets) {
     return cowBaseCombination;
 }
 
+function swapNumbers(subset, fullSetCount) {
+    let subsetCount = { 3: 0, 6: 0 };
+    subset.forEach(num => {
+        if (num === 3) subsetCount[3]++;
+        if (num === 6) subsetCount[6]++;
+    });
+
+    let modifiedSubset = [...subset];
+
+    // Swap extra 6s to 3 if subset has more 6s than fullSet
+    if (subsetCount[6] > fullSetCount[6]) {
+        let excess = subsetCount[6] - fullSetCount[6];
+        for (let i = 0; i < modifiedSubset.length && excess > 0; i++) {
+            if (modifiedSubset[i] === 6) {
+                modifiedSubset[i] = 3;
+                excess--;
+            }
+        }
+    }
+
+    // Swap extra 3s to 6 if subset has more 3s than fullSet
+    if (subsetCount[3] > fullSetCount[3]) {
+        let excess = subsetCount[3] - fullSetCount[3];
+        for (let i = 0; i < modifiedSubset.length && excess > 0; i++) {
+            if (modifiedSubset[i] === 3) {
+                modifiedSubset[i] = 6;
+                excess--;
+            }
+        }
+    }
+
+    // If subset contains 6 but fullSet has 0, swap all 6s to 3
+    if (fullSetCount[6] === 0) {
+        modifiedSubset = modifiedSubset.map(num => (num === 6 ? 3 : num));
+    }
+
+    // If subset contains 3 but fullSet has 0, swap all 3s to 6
+    if (fullSetCount[3] === 0) {
+        modifiedSubset = modifiedSubset.map(num => (num === 3 ? 6 : num));
+    }
+
+    return modifiedSubset;
+}
+
 function getCowCombinations(fullSet, subsets) {
     let results = [];
 
-    // Check if fullSet contains 3 or 6
-    let hasThree = fullSet.includes(3);
-    let hasSix = fullSet.includes(6);
+    // Count occurrences of 3 and 6 in the fullSet
+    let fullSetCount = { 3: 0, 6: 0 };
+    fullSet.forEach(num => {
+        if (num === 3) fullSetCount[3]++;
+        if (num === 6) fullSetCount[6]++;
+    });
 
     subsets.forEach(subset => {
-        // Create a modified subset where 3/6 are swapped if necessary
-        let modifiedSubset = subset.map(num => {
-            if (num === 3 && !hasThree) return 6; // Swap 3 → 6 if fullSet lacks 3
-            if (num === 6 && !hasSix) return 3; // Swap 6 → 3 if fullSet lacks 6
-            return num;
-        });
+
+        let modifiedSubset = swapNumbers(subset, fullSetCount);
+        console.log('modifiedSubset', modifiedSubset)
 
         // Create a copy of fullSet to modify
         let remaining = [...fullSet];
@@ -120,7 +165,7 @@ function getCowCombinations(fullSet, subsets) {
         function generateSwaps(arr, index) {
             if (index === arr.length) {
                 let sortedArr = [...arr].sort();
-                combinations.add(JSON.stringify(sortedArr));// Store as string to avoid duplicates
+                combinations.add(JSON.stringify(sortedArr)); // Store as string to avoid duplicates
                 return;
             }
 
@@ -137,7 +182,7 @@ function getCowCombinations(fullSet, subsets) {
 
         // Add all unique combinations to results
         combinations.forEach(comb => {
-            results.push({ cowBase: subset, cowRemaining: JSON.parse(comb), isSame });
+            results.push({ cowBase: modifiedSubset, cowRemaining: JSON.parse(comb), isSame });
         });
     });
 
@@ -166,7 +211,10 @@ function getLargestCowNumber(cowCombination) {
     return { maxLastDigit, maxCombination };
 }
 
+
 function calculateCows() {
+    let resultDisplayText;
+
     // 1. Convert face cards (A=1, J=10, Q=10, K=10)
     let cardValues = values.map(val => {
         if (val === 'A') return 1;
@@ -180,48 +228,74 @@ function calculateCows() {
 
     // 3. Check if cow exist (a + b + c = 10 || 20 || 30)
     let cowBaseCombination = checkCowCondition(triplets);
+    console.log('cowBaseCombination', cowBaseCombination)
     if (cowBaseCombination.length == 0) {
         document.getElementById('result').textContent = "🤡  No 🐮";
         return
     }
 
-    // 4. Get all all possible combination with 3↔6 swaps (5 numbers)
+    // 4. Get all possible combination with 3↔6 swaps (5 numbers)
     let cowCombination = getCowCombinations(cardValues, cowBaseCombination);
     console.log('Cow Combination', cowCombination)
 
     // 5. Check if there is double number
-    let maxSameCow = null;
+    // let maxSameCow = null;
     cowCombination.forEach(combination => {
         if (combination.isSame) {
             // Track the largest cowRemaining[0]
-            if (maxSameCow === null || combination.cowRemaining[0] > maxSameCow) {
-                maxSameCow = combination.cowRemaining[0];
+            if (result === null || combination.cowRemaining[0] > result.cowRemaining[0]) {
+                result = combination;
             }
         }
     });
+    console.log("result", result)
 
     // If there's a "same" cow, display the largest one
-    if (maxSameCow !== null) {
-        document.getElementById('result').textContent = "Double " + maxSameCow + " 🐮";
+    if (result !== null) {
 
+        // Special case: when maxSameCow is 10 
+        if (result.cowRemaining[0] == 10) {
+            const targetCards = new Set(["K", "J", "Q", "10"]);
+            const count = {};
+
+            // Count occurrences of target cards
+            for (const card of values) {
+                count[card] = (count[card] || 0) + 1;
+            }
+
+            // Check for doubles
+            for (const card of targetCards) {
+                if (count[card] >= 2) {
+                    result.cowRemaining[0] = card;
+                    result.cowRemaining[1] = card;
+                    resultDisplayText = "Double " + card + " 🐮";
+                }
+            }
+
+            // If no double found, show the cowRemaining[0] value
+            if (!resultDisplayText) resultDisplayText = result.cowRemaining[0] + " 🐮";
+        } else {
+            resultDisplayText = "Double " + result.cowRemaining[0] + " 🐮";
+        }
     } else {
-
         // 6. Calculate the largest cow number
         let largestCowNumber = getLargestCowNumber(cowCombination);
         result = largestCowNumber;
         console.log('Largest Cow Number', largestCowNumber);
-        document.getElementById('result').textContent = largestCowNumber.maxLastDigit + " 🐮";
-
-        let calResult = document.getElementById("calculationResult");
-        calResult.textContent = 'Result'
-        calResult.style.display = (calResult.style.display === "none" || calResult.style.display === "") ? "block" : "none";
+        resultDisplayText = result.maxLastDigit + " 🐮";
     }
+
+    // 7. Display Calculation Result
+    document.getElementById('result').textContent = resultDisplayText;
+    let calResult = document.getElementById("calculationResult");
+    calResult.textContent = 'Result'
+    calResult.style.display = (calResult.style.display === "none" || calResult.style.display === "") ? "block" : "none";
 }
 
 function toggleResult() {
     let calResult = document.getElementById("calculationResult");
     if (calResult.textContent === "Result") {
-        calResult.textContent = "Cow Base: " + result.maxCombination.cowBase;
+        calResult.textContent = "Cow Base: " + (result.cowBase ?? result.maxCombination.cowBase);
     } else {
         calResult.textContent = "Result";
     }
