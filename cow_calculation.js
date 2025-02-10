@@ -10,6 +10,7 @@ function addValue(val) {
 
 function removeLast() {
     values.pop();
+    result = null;
     updateDisplay();
 }
 
